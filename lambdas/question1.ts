@@ -1,55 +1,51 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-
-import { DynamoDBClient, QueryCommand, QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  QueryCommand,
+  QueryCommandInput,
+} from "@aws-sdk/lib-dynamodb";
+import schema from "../shared/types.schema.json";
 
 const client = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
-  try {
-    console.log("Event: ", JSON.stringify(event));
-    const pathParameters = event?.pathParameters;
-    const movieId = pathParameters?.movieId ? pathParameters.movieId : undefined;
-    const role = pathParameters?.role ? pathParameters.role : undefined;
+    try {
+      console.log("[EVENT]", JSON.stringify(event));
+      const queryParams = event.queryStringParameters;
+      if (!queryParams) {
+        return {
+          statusCode: 500,
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ message: "Missing query parameters" }),
+        };
+      }
+      var isVerbose = false
+      if ("verbose" in queryParams) {
+        const verbose = (queryParams.verbose);
+        if (verbose === "true") {
+          isVerbose = true
+        } else isVerbose = false
+      }
 
-    if (!movieId) {
-      return {
-        statusCode: 404,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ Message: "Missing movie Id" }),
-      };
-    }
-
-    if (!role) {
-      return {
-        statusCode: 404,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ Message: "Missing role" }),
-      };
-    }
-
-    // const input = {
-    //   ExpressionAttributeValues: {
-    //     :v1: {
-    //       S: "No One You Know"
-    //     }
-    //   },
-    //   KeyConditionExpression: "Artist = :v1",
-    //   ProjectionExpression: "SongTitle",
-    //   TableName: "Music"
-    // };
         let commandInput: QueryCommandInput = {
           TableName: process.env.TABLE_NAME,
         };
-        commandInput = {
+        if (!isVerbose) {
+          commandInput = {
             ...commandInput,
             IndexName: "movieId",
             KeyConditionExpression: "movieId = :movieId and role = :role ",
           };
+        } else {
+          commandInput = {
+            ...commandInput,
+            IndexName: "movieId",
+            KeyConditionExpression: "movieId = :movieId",
+          };
+        }
               const commandOutput = await client.send(
                 new QueryCommand(commandInput)
               );

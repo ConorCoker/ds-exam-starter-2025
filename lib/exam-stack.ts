@@ -79,15 +79,12 @@ export class ExamStack extends cdk.Stack {
       },
     });
 
-    const anEndpoint = api.root.addResource("patha");
+    const anEndpoint = api.root.addResource("crew");
             anEndpoint.addMethod(
               "GET",
               new apig.LambdaIntegration(question1Fn, { proxy: true })
             );
 
-            // const idEndpoint = anEndpoint.addResource("{movieId}");
-            // const roleEndpoint = anEndpoint.addResource("{role}");
-            
 
 
     // ==================================
