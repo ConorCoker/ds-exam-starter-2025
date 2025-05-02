@@ -19,6 +19,13 @@ export class ExamStack extends cdk.Stack {
     super(scope, id, props);
 
     // Question 1 - Serverless REST API
+//     Part A.
+// You are required to add a new endpoint to the REST API, defined as follows:
+
+// GET /crew/{role}/movies/{movieId} - Get the details of the crew member who performed a specific role in a 
+// particular movie, e.g. GET /crew/director/movies/1234 - get the director for movie 1234.
+// (Git) After completing the above implementation, commit the changes using the commit message 
+// "Added new endpoint to API".
 
     // A table that stores data about a movie's crew, i.e. director, camera operators, etc.
     const table = new dynamodb.Table(this, "MoviesTable", {
@@ -40,6 +47,8 @@ export class ExamStack extends cdk.Stack {
         REGION: "eu-west-1",
       },
     });
+
+    table.grantReadData(question1Fn)
 
     new custom.AwsCustomResource(this, "moviesddbInitData", {
       onCreate: {
@@ -71,6 +80,14 @@ export class ExamStack extends cdk.Stack {
     });
 
     const anEndpoint = api.root.addResource("patha");
+            anEndpoint.addMethod(
+              "GET",
+              new apig.LambdaIntegration(question1Fn, { proxy: true })
+            );
+
+            // const idEndpoint = anEndpoint.addResource("{movieId}");
+            // const roleEndpoint = anEndpoint.addResource("{role}");
+            
 
 
     // ==================================
